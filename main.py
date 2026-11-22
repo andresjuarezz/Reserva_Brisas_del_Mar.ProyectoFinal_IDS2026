@@ -142,3 +142,100 @@ def registrar(reservas):
     print(f"Estancia: del {llegada} al {salida} de diciembre ({noches} noches)")
     print(f"Total a pagar: ${total}")
     print("Horario informativo: Check-in desde las 15:00, Check-out hasta las 12:00.")
+
+
+def consultar(reservas):
+    """Muestra las reservas registradas con su desglose completo."""
+    print("\n--- Reservas Registradas ---")
+    if len(reservas) == 0:
+        print("No hay reservas registradas.")
+        return
+
+    for r in reservas:
+        numero = r.numero
+        nombre = r.nombre
+        habitacion = r.habitacion
+        tipo = r.tipo
+        personas = r.personas
+        plan = r.plan
+        llegada = r.llegada
+        salida = r.salida()
+        noches = r.noches
+        precio_noche = tipos[tipo]["precio"]
+        total = r.calcular_total(precio_noche)
+        print(
+            f"#{numero} | {nombre} | Hab {habitacion} ({tipo}) | "
+            f"{personas} pers. | {plan} | Del {llegada} al {salida} de dic. "
+            f"({noches} noches) | Total: ${total}"
+        )
+
+
+def cotizar(reservas):
+    """Cotiza ambos planes para una estancia y muestra las habitaciones libres."""
+    print("\n--- Cotizar Estancia ---")
+    tipo = input("Tipo de habitacion (Individual, Pareja, Familiar): ").strip().title()
+    if tipo not in tipos:
+        print("Error (R2): tipo de habitacion invalido. Use Individual, Pareja o Familiar.")
+        return
+
+    capacidad = tipos[tipo]["capacidad"]
+    personas = pedir_entero(f"Cantidad de personas (1-{capacidad}): ", 1, capacidad)
+    llegada = pedir_entero("Dia de llegada en diciembre (1-30): ", 1, 30)
+    noches = pedir_entero("Cantidad de noches (1-7): ", 1, 7)
+    salida = llegada + noches
+    if salida > 31:
+        print("Error (R3): la fecha de salida no puede pasar del 31 de diciembre.")
+        return
+
+    precio_noche = tipos[tipo]["precio"]
+    cot_solo = Reserva(0, "Cotizacion", 0, tipo, personas, "Solo habitacion", llegada, noches)
+    cot_todo = Reserva(0, "Cotizacion", 0, tipo, personas, "Todo incluido", llegada, noches)
+    total_solo = cot_solo.calcular_total(precio_noche)
+    total_todo = cot_todo.calcular_total(precio_noche)
+
+    libres = habitaciones_libres(reservas, tipo, llegada, salida)
+    print("\nResultado de cotizacion:")
+    print(f"Tipo: {tipo} | Personas: {personas}")
+    print(f"Estancia: del {llegada} al {salida} de diciembre ({noches} noches)")
+    print(f"Plan Solo habitacion: ${total_solo}")
+    print(f"Plan Todo incluido: ${total_todo}")
+    if len(libres) > 0:
+        texto_libres = ""
+        for hab in libres:
+            if texto_libres == "":
+                texto_libres = f"{hab}"
+            else:
+                texto_libres = f"{texto_libres}, {hab}"
+        print(f"Habitaciones disponibles: {texto_libres}")
+    else:
+        print("Disponibilidad: no hay habitaciones libres de ese tipo para esas fechas.")
+    print("Horario informativo: Check-in desde las 15:00, Check-out hasta las 12:00.")
+
+
+reservas = cargar()
+cantidad_inicial = len(reservas)
+print("=== Hotel Brisas del Mar - Sistema de Reservas ===")
+print(f"Reservas cargadas: {cantidad_inicial}")
+
+opcion = ""
+while opcion != "5":
+    print("\n--- Menu Principal ---")
+    print("1. Registrar reserva")
+    print("2. Consultar reservas")
+    print("3. Cotizar estancia")
+    print("4. Guardar reservas")
+    print("5. Salir")
+    opcion = input("Elija una opcion (1-5): ").strip()
+
+    if opcion == "1":
+        registrar(reservas)
+    elif opcion == "2":
+        consultar(reservas)
+    elif opcion == "3":
+        cotizar(reservas)
+    elif opcion == "4":
+        guardar(reservas)
+    elif opcion == "5":
+        print("Gracias por usar el sistema de Hotel Brisas del Mar. Hasta pronto.")
+    else:
+        print("Opcion invalida. Por favor elija una opcion del 1 al 5.")
